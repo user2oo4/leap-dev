@@ -102,21 +102,29 @@ ll n,m,k,t,t1,i,j,a,b,u,res;
 ll val[101];
 int main()
 {
-    srand(21324);
+    srand(29104);
     fio;
+
     cin>>n;
     cout<<n<<endl;
-    for (i=0;i<n;i++) if (rand()&1) val[i]=1; else val[i]=-1;
+	
+	
+	for (i=0;i<n;i++) {
+        u=rand()%26;
+		u+=5;
+		
+        u*=(rand()&1)*2-1;
+		cout<<u<<endl;
+	}
+	
     for (i=0;i<n;i++) for (j=i+1;j<n;j++) {
-        u=rand()&3;
-        u++;
-        u*=-1*val[i]*val[j];
-        if (true) {
-            cout<<i<<' '<<j<<' '<<u<<endl; 
-            res+=-abs(u);
-        }
+        u=rand()%26;
+		u+=5;
+		
+        u*=(rand()&1)*2-1;
+		
+		cout<<i<<' '<<j<<' '<<u<<endl; 
     }
     cout<<-1<<endl;
-    cout<<res<<endl;
 }
 // a;
