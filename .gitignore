@@ -1,7 +1,8 @@
-*.txt
+
 bp
 cg
 hc
 bi
 cl
 hcb
+__pycache__
