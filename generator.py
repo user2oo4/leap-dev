@@ -17,6 +17,8 @@ SEED = 23451234
 random.seed(SEED)
 
 from networkx.generators.random_graphs import connected_watts_strogatz_graph as WSGraph
+from networkx.generators.random_graphs import random_powerlaw_tree as PLTree
+from networkx.generators.random_graphs import barabasi_albert_graph as BAGraph
 
 def solve(graph: NXGraph) -> int :
     model = BQM(vartype=SPIN)
@@ -75,6 +77,21 @@ graph = WSGraph(20, 4, 0.2, 100, SEED)
 add_weight(graph, -10, 10)
 
 output(graph, 'ws20')
+
+
+graph = BAGraph(50, 7, SEED)
+
+add_weight(graph, -10, 10)
+
+output(graph, 'ba50')
+
+
+graph = BAGraph(20, 4, SEED)
+
+add_weight(graph, -10, 10)
+
+output(graph, 'ba20')
+
 
 # nx.draw(graph)
     
