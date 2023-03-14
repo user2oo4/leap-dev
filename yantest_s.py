@@ -7,7 +7,6 @@ from dimod.vartypes import SPIN
 import dwave_networkx as dnx
 import networkx as nx
 from minorminer import find_embedding
-from dwave.embedding.chain_strength import uniform_torque_compensation as UTC
 from dwave.embedding import embed_bqm, unembed_sampleset, EmbeddedStructure
 from functools import partial
 from copy import deepcopy
@@ -17,32 +16,83 @@ hardware_graph : list[ tuple[int, int] ] = Sampler.edgelist
 nx_graph = nx.Graph(hardware_graph)
 
 EPS = 1e-9
-cached : dict = {}
+cached : dict[any,float] = {}
+cached_avg : float = 0
 
 def YanStrength( source : BinaryQuadraticModel, embedding : EmbeddedStructure, multiplier: float):
-    global cached
-    print('Default called')
+    global cached, cached_avg
+    print('YanStrength called')
     if (cached == {}):
-        res = UTC(source, embedding)
         
-        cs_array = {}
+        embedded = embedding.embed_bqm(source, 1000000)
+        to_logical: dict = {}
+        cs_array : dict = {}
+
+        j_field : dict = {}
+        h_field : dict = {}
+
         for i in source.variables:
-            cs_array[i] = res
+            cs_array[i] = 0
+            for j in embedding[i]:  
+                to_logical[j] = i
+                j_field[j] = 0
+                h_field[j] = 0
+
+        for u in embedded.quadratic.keys():
+            if (embedded.quadratic[u] != -1000000):
+                # print(u)
+                j_field[u[0]] += abs(embedded.quadratic[u])
+                j_field[u[1]] += abs(embedded.quadratic[u])
+        
+        for u in embedded.variables:
+            h_field[u] = embedded.linear[u]
+        
+        for i in source.variables:
+            print(f'calculating {i}')
+            m = len(embedding[i])
+            p2 = 2 ** (m)
+            print(f'{m} {p2}')
+
+            for mask in range(1, p2):
+                # print(f'{i} : {mask} / {p2}')
+                sum1 : int = 0
+                sum2 : int = - model.linear[i]
+                setSize : int = 0
+
+                for j in range(m):
+                    v = embedding[i][j]
+                    setSize += (mask&1)
+                    if (mask&1):
+                        sum1 += h_field[v] - j_field[v]
+                        sum2 += h_field[v]
+                    else:
+                        sum2 -= j_field[v]
+                    mask = mask >> 1
+
+                sum1 = abs(sum1)
+                sum2 = abs(sum2)
+
+                cs_array[i] = max(cs_array[i], min(sum1,sum2)/setSize) 
+            cached_avg += cs_array[i]
 
         cached = deepcopy(cs_array)
+        cached_avg /= len(cs_array)
         print(cached)
+
+        print(f'avg: {cached_avg}')
+
         for i in source.variables:
-            cs_array[i] *= multiplier 
+            cs_array[i] = cached_avg * multiplier + cached[i] * (1-multiplier) 
         return cs_array
     else:
         cs_array = deepcopy(cached)
         for i in source.variables:
-            cs_array[i] *= multiplier
+            cs_array[i] = cached_avg * multiplier + cached[i] * (1-multiplier) 
         return cs_array
 
 
 
-cs_list = [0.7, 0.8, 0.9, 0.95, 1, 1.05, 1.1, 1.2, 1.3]
+cs_list = [0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.8, 0.9, 1]
 at_list = [10, 20, 50]
 
 # cs_list = [10,25,50]

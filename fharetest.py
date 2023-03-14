@@ -22,7 +22,8 @@ from queue import PriorityQueue
 
 
 EPS = 1e-9
-cached : dict = {}
+cached : dict[any,float] = {}
+cached_avg : float = {}
 
 def FastHareStrength( source : BinaryQuadraticModel, embedding : EmbeddedStructure, multiplier: float):
     global cached
@@ -80,6 +81,7 @@ def FastHareStrength( source : BinaryQuadraticModel, embedding : EmbeddedStructu
                     leaves.put(item=(j_field[v],v))
 
         cached = deepcopy(cs_array)
+        print(cached)
         for i in source.variables:
             cs_array[i] *= multiplier 
         return cs_array
@@ -91,7 +93,7 @@ def FastHareStrength( source : BinaryQuadraticModel, embedding : EmbeddedStructu
 
 
 
-cs_list = [0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]
+cs_list = [0.7, 0.8, 0.9, 0.95, 1, 1.05, 1.1, 1.2, 1.3]
 at_list = [10,20,50]
 
 # cs_list = [10,25,50]
@@ -127,7 +129,14 @@ optimal_solution = int(input())
 
 # TEST
 
-composite = LazyFixedEmbeddingComposite(Sampler)
+## this is the stupidest fucking workaround ever but it has to be done
+## since passing random_seed from LFEC class doesn't work for some BS reason
+
+def fe(S, T, **kwargs):
+    return find_embedding(S, T, random_seed=123123)
+
+
+composite = LazyFixedEmbeddingComposite(Sampler, find_embedding=fe)
 
 for i in range(len(cs_list)):
     mult = cs_list[i]

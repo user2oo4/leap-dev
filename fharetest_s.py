@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import random
 from dwave.cloud import Client
 from dwave.system import DWaveSampler, EmbeddingComposite, LazyFixedEmbeddingComposite
@@ -7,7 +8,6 @@ from dimod.vartypes import SPIN
 import dwave_networkx as dnx
 import networkx as nx
 from minorminer import find_embedding
-from dwave.embedding.chain_strength import uniform_torque_compensation as UTC
 from dwave.embedding import embed_bqm, unembed_sampleset, EmbeddedStructure
 from functools import partial
 from copy import deepcopy
@@ -16,34 +16,89 @@ Sampler = CSampler
 hardware_graph : list[ tuple[int, int] ] = Sampler.edgelist
 nx_graph = nx.Graph(hardware_graph)
 
-EPS = 1e-9
-cached : dict = {}
 
-def YanStrength( source : BinaryQuadraticModel, embedding : EmbeddedStructure, multiplier: float):
-    global cached
-    print('Default called')
+from queue import PriorityQueue
+# from typing import PriorityQueue
+
+
+EPS = 1e-9
+cached : dict[any,float] = {}
+cached_avg : float = 0
+
+def FastHareStrength( source : BinaryQuadraticModel, embedding : EmbeddedStructure, multiplier: float):
+    global cached, cached_avg
+    print('fhare called')
     if (cached == {}):
-        res = UTC(source, embedding)
         
-        cs_array = {}
+        embedded = embedding.embed_bqm(source, 1000000)
+        to_logical: dict[int,int] = {}
+        cs_array : dict[int,int] = {}
+
+        j_field : dict[int,int] = {}
+        h_field : dict[int,int] = {}
+
+        gt : dict[int,set[int]] = {}
+
+        leaves : PriorityQueue[tuple[int,int]] = PriorityQueue()
+
         for i in source.variables:
-            cs_array[i] = res
+            cs_array[i] = 0
+            for j in embedding[i]:  
+                to_logical[j] = i
+                j_field[j] = 0
+                h_field[j] = abs(embedded.linear[j])
+                gt[j] = set()
+
+        for u in embedded.quadratic.keys():
+            if (embedded.quadratic[u] != -1000000):
+                # print(u)
+                j_field[u[0]] += abs(embedded.quadratic[u])
+                j_field[u[1]] += abs(embedded.quadratic[u])
+            else:
+                gt[u[0]].add(u[1])
+                gt[u[1]].add(u[0])
+        
+        for i in source.variables:
+            print(f'processing logical qubit {i}')
+            leaves = PriorityQueue()
+            for j in embedding[i]:
+                if (len(gt[j]) == 1):
+                    leaves.put(item=(j_field[j],j))
+            for cnt in range(len(embedding[i])-1):
+                if (leaves.empty()):
+                    print(f'error: queue empty')
+                w, u = leaves.get()
+                v = list(gt[u])[0]
+                print(f'edge {u} {v} {w}')
+                gt[u].remove(v)
+                gt[v].remove(u)
+
+                if (cs_array[i] < w):
+                    cs_array[i] = w
+                
+                j_field[v] += abs(w)
+                if (len(gt[v]) == 1):
+                    leaves.put(item=(j_field[v],v))
+            cached_avg += cs_array[i]
 
         cached = deepcopy(cs_array)
+        cached_avg /= len(cs_array)
         print(cached)
+        print(f'avg:{cached_avg}')
+
         for i in source.variables:
-            cs_array[i] *= multiplier 
+            cs_array[i] = cached_avg * multiplier + cached[i] * (1-multiplier) 
         return cs_array
     else:
         cs_array = deepcopy(cached)
         for i in source.variables:
-            cs_array[i] *= multiplier
+            cs_array[i] = cached_avg * multiplier + cached[i] * (1-multiplier) 
         return cs_array
 
 
 
-cs_list = [0.7, 0.8, 0.9, 0.95, 1, 1.05, 1.1, 1.2, 1.3]
-at_list = [10, 20, 50]
+cs_list = [0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.8, 0.9, 1]
+at_list = [10,20,50]
 
 # cs_list = [10,25,50]
 # at_list = [5,10,20]
@@ -89,7 +144,7 @@ composite = LazyFixedEmbeddingComposite(Sampler, find_embedding=fe)
 
 for i in range(len(cs_list)):
     mult = cs_list[i]
-    finalStrength = partial(YanStrength, multiplier = mult)
+    finalStrength = partial(FastHareStrength, multiplier = mult)
 
 
     for j in range(len(at_list)):

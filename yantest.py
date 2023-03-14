@@ -16,7 +16,8 @@ hardware_graph : list[ tuple[int, int] ] = Sampler.edgelist
 nx_graph = nx.Graph(hardware_graph)
 
 EPS = 1e-9
-cached : dict = {}
+cached : dict[any,float] = {}
+cached_avg : float = {}
 
 def YanStrength( source : BinaryQuadraticModel, embedding : EmbeddedStructure, multiplier: float):
     global cached
@@ -74,6 +75,7 @@ def YanStrength( source : BinaryQuadraticModel, embedding : EmbeddedStructure, m
                 cs_array[i] = max(cs_array[i], min(sum1,sum2)/setSize) 
             cs_array[i] = cs_array[i]
         cached = deepcopy(cs_array)
+        print(cached)
         for i in source.variables:
             cs_array[i] *= multiplier 
         return cs_array
@@ -85,7 +87,7 @@ def YanStrength( source : BinaryQuadraticModel, embedding : EmbeddedStructure, m
 
 
 
-cs_list = [1.4, 1.5, 1.7, 2.0, 2.5, 3.0, 4.0]
+cs_list = [0.7, 0.8, 0.9, 0.95, 1, 1.05, 1.1, 1.2, 1.3]
 at_list = [10, 20, 50]
 
 # cs_list = [10,25,50]
@@ -121,7 +123,14 @@ optimal_solution = int(input())
 
 # TEST
 
-composite = LazyFixedEmbeddingComposite(Sampler)
+## this is the stupidest fucking workaround ever but it has to be done
+## since passing random_seed from LFEC class doesn't work for some BS reason
+
+def fe(S, T, **kwargs):
+    return find_embedding(S, T, random_seed=123123)
+
+
+composite = LazyFixedEmbeddingComposite(Sampler, find_embedding=fe)
 
 for i in range(len(cs_list)):
     mult = cs_list[i]
