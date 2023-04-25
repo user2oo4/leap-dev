@@ -43,7 +43,7 @@ def YanStrength( source : BinaryQuadraticModel, embedding : EmbeddedStructure, m
 
 
 cs_list = [0.7, 0.8, 0.9, 0.95, 1, 1.05, 1.1, 1.2, 1.3]
-at_list = [10, 20, 50]
+at_list = [50]
 
 # cs_list = [10,25,50]
 # at_list = [5,10,20]
@@ -128,7 +128,7 @@ for i in range(len(cs_list)):
         s2_table[j].append(s2_cnt)
         ncb_table[j].append(ncb_cnt)
 
-    # dwave.inspector.show(sample_set)
+    dwave.inspector.show(sample_set)
 
 for r in s1_table :
     print(r)
