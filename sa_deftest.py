@@ -43,7 +43,7 @@ class FakeChimeraSampler(dimod.Sampler, dimod.Structured):
         return SASampler.sample(bqm, **parameters)
 
 FCSampler = FakeChimeraSampler()
-Sampler = FCSampler
+Sampler = CSampler
 
 EPS = 1e-9
 cached : dict = {}
@@ -123,7 +123,7 @@ current_mult : dict[any, float] = {}
 for i in model.variables:
     current_mult[i] = 1
 
-f = open(f'results/special_scale_ws20_10.csv', 'w', encoding='utf-8')
+f = open(f'results/special_scale_ba20_dwave2.csv', 'w', encoding='utf-8')
 f.write('node,scale,point5no,3no,avgsol,chainbreak\n')
 
 i = 1.5
@@ -131,14 +131,14 @@ while(True):
     
     print('Current run:')
 
-    file = open('results/individual_scale_ws20_10.csv', newline='')
+    file = open('results/individual_scale_ba20_dwave2.csv', newline='')
     reader = csv.reader(file)
     for row in reader:
         if (row[0] != 'node'):
             current_mult[int(row[0])] = float(row[1]) * i
     print(current_mult)
     finalStrength = partial(YanStrength, multiplier = current_mult)
-    sample_set = composite.sample(model, num_reads=1000, chain_strength = finalStrength, annealing_time = 50)
+    sample_set = composite.sample(model, num_reads=100, chain_strength = finalStrength, annealing_time = 50)
 
     s1_cnt = 0
     s2_cnt = 0
@@ -158,11 +158,11 @@ while(True):
         ncb_cnt += r.chain_break_fraction
     print(f'Number of samples within .5% = {s1_cnt}')
     print(f'Number of samples within 3% = {s2_cnt}')
-    print(f'Average solution value = {avg/1000}')
-    print(f'Percentage of chains broken = {ncb_cnt/10}')
+    print(f'Average solution value = {avg/100}')
+    print(f'Percentage of chains broken = {ncb_cnt/1}')
     # dwave.inspector.show(sample_set)
-    f.write(f'{0},{i},{s1_cnt},{s2_cnt},{avg/1000},{ncb_cnt/10}\n')
-    i = i - 0.02
+    f.write(f'{0},{i},{s1_cnt},{s2_cnt},{avg/100},{ncb_cnt/1}\n')
+    i = i - 0.05
     if (i<0.099):
         break
 f.close()

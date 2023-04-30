@@ -12,9 +12,11 @@ from dwave.embedding.chain_strength import uniform_torque_compensation as UTC
 from dwave.embedding import embed_bqm, unembed_sampleset, EmbeddedStructure
 from functools import partial
 from copy import deepcopy
+import math
 
 from dwave.samplers import SimulatedAnnealingSampler
 SASampler = SimulatedAnnealingSampler()
+CSampler = DWaveSampler(solver={'topology__type': 'chimera'})
 
 hw = dnx.chimera_graph(16,16)
 
@@ -41,7 +43,7 @@ class FakeChimeraSampler(dimod.Sampler, dimod.Structured):
         return SASampler.sample(bqm, **parameters)
 
 FCSampler = FakeChimeraSampler()
-Sampler = FCSampler
+Sampler = CSampler
 
 EPS = 1e-9
 cached : dict = {}
@@ -121,19 +123,21 @@ current_mult : dict[any, float] = {}
 for i in model.variables:
     current_mult[i] = 1
 
-f = open(f'results/individual_scale_ws20_10.csv', 'w', encoding='utf-8')
+f = open(f'results/individual_scale_ba20_dwave2.csv', 'w', encoding='utf-8')
 f.write('node,scale,point5no,3no,avgsol,chainbreak\n')
 
 for i in model.variables:
-    j = 1
-    while (True):
+    lb = 0.1
+    rb = 1
+    for ll in range(15):
+        j = math.sqrt(lb*rb)
         print('Current run:')
         print(f'Variable: {i}')
         # print(f'annealing time = {at}')
         print(f'Multiplier: {j}')
         current_mult[i] = j
         finalStrength = partial(YanStrength, multiplier = current_mult)
-        sample_set = composite.sample(model, num_reads=1000, chain_strength = finalStrength)
+        sample_set = composite.sample(model, num_reads=100, chain_strength = finalStrength)
 
         s1_cnt = 0
         s2_cnt = 0
@@ -153,16 +157,15 @@ for i in model.variables:
             ncb_cnt += r.chain_break_fraction
         print(f'Number of samples within .5% = {s1_cnt}')
         print(f'Number of samples within 3% = {s2_cnt}')
-        print(f'Average solution value = {avg/1000}')
-        print(f'Percentage of chains broken = {ncb_cnt/10}')
+        print(f'Average solution value = {avg/100}')
+        print(f'Percentage of chains broken = {ncb_cnt/1}')
 
-        if (ncb_cnt >= 5):
-            break
-        if (j <= 0.1):
-            # j = 0
-            break
-        j = j * 0.99
-    j = j / 0.99
+        if (ncb_cnt >= 0.3):
+            lb = math.pow(rb * lb * lb, 1/3)
+        else:
+            rb = math.pow(rb * rb * lb, 1/3)
+        
+    j = math.sqrt(lb * rb)
 
     print('Final run:')
     print(f'Variable: {i}')
@@ -170,7 +173,7 @@ for i in model.variables:
     print(f'Multiplier: {j}')
     current_mult[i] = j
     finalStrength = partial(YanStrength, multiplier = current_mult)
-    sample_set = composite.sample(model, num_reads=1000, chain_strength = finalStrength)
+    sample_set = composite.sample(model, num_reads=100, chain_strength = finalStrength)
 
     s1_cnt = 0
     s2_cnt = 0
@@ -190,9 +193,9 @@ for i in model.variables:
         ncb_cnt += r.chain_break_fraction
     print(f'Number of samples within .5% = {s1_cnt}')
     print(f'Number of samples within 3% = {s2_cnt}')
-    print(f'Average solution value = {avg/1000}')
-    print(f'Percentage of chains broken = {ncb_cnt/10}')
+    print(f'Average solution value = {avg/100}')
+    print(f'Percentage of chains broken = {ncb_cnt/1}')
     
-    f.write(f'{i},{j},{s1_cnt},{s2_cnt},{avg/1000},{ncb_cnt/10}\n')
+    f.write(f'{i},{j},{s1_cnt},{s2_cnt},{avg/100},{ncb_cnt/1}\n')
     current_mult[i] = 1
 f.close()
