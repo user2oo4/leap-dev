@@ -123,7 +123,7 @@ current_mult : dict[any, float] = {}
 for i in model.variables:
     current_mult[i] = 1
 
-f = open(f'results/individual_scale_ws20_dwave2.csv', 'w', encoding='utf-8')
+f = open(f'results/individual_scale_bi20_dwave2.csv', 'w', encoding='utf-8')
 f.write('node,scale,point5no,3no,avgsol,chainbreak\n')
 
 for i in model.variables:
