@@ -124,7 +124,7 @@ current_mult : dict[any, float] = {}
 for i in model.variables:
     current_mult[i] = 1
 
-f = open(f'results/special_scale_bi20_dwave2.csv', 'w', encoding='utf-8')
+f = open(f'results/all_scale_rm25_dwave2.csv', 'w', encoding='utf-8')
 f.write('node,scale,point5no,3no,avgsol,chainbreak\n')
 
 i = 2.0
@@ -132,11 +132,11 @@ while(True):
     
     print('Current run:')
 
-    file = open('results/individual_scale_bi20_dwave2.csv', newline='')
+    file = open('results/individual_scale_rm25_dwave2.csv', newline='')
     reader = csv.reader(file)
     for row in reader:
         if (row[0] != 'node'):
-            current_mult[int(row[0])] = float(row[1]) * i
+            current_mult[int(row[0])] = 1 * i
     print(current_mult)
     finalStrength = partial(YanStrength, multiplier = current_mult)
     sample_set = composite.sample(model, num_reads=100, chain_strength = finalStrength, annealing_time = 50)
