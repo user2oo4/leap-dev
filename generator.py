@@ -65,32 +65,12 @@ def add_weight(graph: NXGraph, lower: int, upper: int):
         graph.edges[e]['w'] = u
 
 
-graph = WSGraph(50, 8, 0.2, 100, SEED)
+graph = WSGraph(100, 12, 0.3, 100, SEED)
 
-add_weight(graph, -10, 10)
+add_weight(graph, -20, 20)
 
-output(graph, 'ws50')
+output(graph, 'ws100')
 
-
-graph = WSGraph(20, 4, 0.2, 100, SEED)
-
-add_weight(graph, -10, 10)
-
-output(graph, 'ws20')
-
-
-graph = BAGraph(50, 7, SEED)
-
-add_weight(graph, -10, 10)
-
-output(graph, 'ba50')
-
-
-graph = BAGraph(20, 4, SEED)
-
-add_weight(graph, -10, 10)
-
-output(graph, 'ba20')
 
 
 # nx.draw(graph)

@@ -43,7 +43,7 @@ class FakeChimeraSampler(dimod.Sampler, dimod.Structured):
         return SASampler.sample(bqm, **parameters)
 
 FCSampler = FakeChimeraSampler()
-Sampler = CSampler
+Sampler = FCSampler
 
 EPS = 1e-9
 cached : dict = {}
