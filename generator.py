@@ -38,6 +38,7 @@ def output(graph: NXGraph, name: str):
     nx.drawing.nx_agraph.write_dot(graph, f'dotfiles/{name}.dot')
     sol = solve(graph)
     with open(f'instances/{name}.txt', 'w', encoding='utf-8') as f:
+        f.write(f'{name}\n')
         f.write(f'{len(graph)}\n')
         for i in range(len(graph)):
             u = graph.nodes[i]['w']
@@ -65,14 +66,18 @@ def add_weight(graph: NXGraph, lower: int, upper: int):
         graph.edges[e]['w'] = u
 
 
-graph = WSGraph(100, 12, 0.3, 100, SEED)
+# graph = WSGraph(100, 12, 0.3, 100, SEED)
+
+# add_weight(graph, -20, 20)
+
+# output(graph, 'ws100')
+
+
+
+graph = BAGraph(100, 18, SEED)
 
 add_weight(graph, -20, 20)
 
-output(graph, 'ws100')
-
-
+output(graph, 'ba100')
 
 # nx.draw(graph)
-    
-

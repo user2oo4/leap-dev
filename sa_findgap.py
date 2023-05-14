@@ -51,6 +51,8 @@ FCSampler = FakeChimeraSampler()
 
 print('reading input')
 
+iname: str = input()
+
 n = int(input())
 
 model = BinaryQuadraticModel(vartype=SPIN)
@@ -71,6 +73,7 @@ while(True):
     model.set_quadratic(u,v,a)
 
 optimal_solution = int(input())
+
 
 print(f'Optimal solution: {optimal_solution}')
 
@@ -182,16 +185,24 @@ def hill_climb(lb: float, ub: float) -> list[float]:
                 break
         result.append(point)
     return result
+
 cs_range = get_cs_range(DEF_LB, DEF_UB)
 
 result = hill_climb(cs_range[0], cs_range[1])
 
-# result_temp = [11.929923986596638, 14.007678715746282, 10.93776393403377, 18.174494459887356, 13.727638016933172, 10.767287884397561, 10.593995715825734, 13.683619279592179, 14.358552882896445, 11.650801695897513, 18.724618524262507, 11.709036535824563, 17.93628639558094, 12.732587641354339, 17.06389046379433, 15.044291406520083, 18.809927459237393, 17.198983758223214, 17.781785537812652, 9.784136463693525]
+f = open(f'findgap_results/{iname}.csv', 'w', encoding='utf-8')
+f.write('abs,rel,p5no,3no,avg,break\n')
+sus: float = UTC(model)
+def output(j):
+    print(j)
+    print(j/sus)
+    u = compute(j, CSampler, 200)
+    print(u)
+    f.write(f'{j},{j/sus},{u["p5no"]},{u["3no"]},{u["avg"]},{u["break"]}\n')
 
 for cs in result:
-    print(cs)
-    print(cs/UTC(model))
-    print(compute(cs, CSampler, 200))
+    output(cs)
+output(sus)
 
-print(compute(UTC(model), CSampler, 200))
+f.close()
 # print(UTC(model))   
