@@ -124,7 +124,7 @@ def get_d(j: float, delta: float) -> float:
     return math.log(res_d['break'] / res['break']) / delta
 
 
-DEF_LB: float = 0.0001
+DEF_LB: float = 0.002
 DEF_UB: float = 0.1
 DEF_BS_RUNS: int = 15
 

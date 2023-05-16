@@ -124,7 +124,7 @@ def get_d(j: float, delta: float) -> float:
     return math.log(res_d['break'] / res['break']) / delta
 
 
-DEF_LB: float = 0.0001
+DEF_LB: float = 0.002
 DEF_UB: float = 0.1
 DEF_BS_RUNS: int = 15
 
@@ -165,7 +165,7 @@ DEF_SPLIT: int = 4
 def hill_climb(lb: float, ub: float) -> list[float]:
     result: list[point] = []
     for tri in range(DEF_TRIES):
-        point = random.random()*(ub-lb)/DEF_SPLIT+lb+(ub-lb)/DEF_SPLIT*DEF_TRIES
+        point = random.random()*(ub-lb)/DEF_SPLIT+lb+(ub-lb)/DEF_SPLIT*(tri%DEF_SPLIT)
         # while True:
         #     point = random.random()*(ub-lb)+lb
         #     if (compute(point, FCSampler, 200)['avg'] < optimal_solution * 0.65):
