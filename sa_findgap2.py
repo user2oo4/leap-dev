@@ -197,9 +197,11 @@ sus: float = UTC(model)
 def output(j):
     print(j)
     print(j/sus)
-    u = compute(j, CSampler, 200)
+    u = compute(j, CSampler, 1000)
     print(u)
     f.write(f'{j},{j/sus},{u["p5no"]},{u["3no"]},{u["avg"]},{u["break"]}\n')
+
+result.sort()
 
 for cs in result:
     output(cs)
