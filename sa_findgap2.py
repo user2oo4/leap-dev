@@ -99,6 +99,7 @@ def compute(j: float, sampler: dimod.Sampler, runs: int) -> dict[str,float]:
     s2_cnt: float = 0
     ncb_cnt: float = 0
     avg: float = 0
+    best: float = 0
     for r in sample_set.record:           
         if ( r.energy < optimal_solution * 0.995 + EPS):
             s1_cnt += r.num_occurrences
@@ -106,6 +107,7 @@ def compute(j: float, sampler: dimod.Sampler, runs: int) -> dict[str,float]:
         if ( r.energy < optimal_solution * 0.97 + EPS):
             s2_cnt += r.num_occurrences
         avg += r.energy * r.num_occurrences
+        best = min(best, r.energy)
         ncb_cnt += r.chain_break_fraction
     
     res: dict[str,float] = {}
@@ -113,6 +115,7 @@ def compute(j: float, sampler: dimod.Sampler, runs: int) -> dict[str,float]:
     res['3no'] = s2_cnt / runs
     res['avg'] = avg / runs
     res['break'] = ncb_cnt / runs
+    res['best'] = best
     print(res)
     return res
 
@@ -162,6 +165,8 @@ def get_cs_range(lb: float, ub: float) -> tuple:
 DEF_STEP: float = 0.002
 DEF_TRIES: int = 12
 DEF_SPLIT: int = 4
+DEF_ROUNDING: float = 0.1
+
 def hill_climb(lb: float, ub: float) -> list[float]:
     result: list[point] = []
     for tri in range(DEF_TRIES):
@@ -184,24 +189,28 @@ def hill_climb(lb: float, ub: float) -> list[float]:
                 break
             if (stop):
                 break
-        result.append(point)
+        stop = False
+        for g in result:
+            if (abs(g-point) <= DEF_ROUNDING):
+                stop = True
+        if (not stop):
+            result.append(point)
     return result
 
 cs_range = get_cs_range(DEF_LB, DEF_UB)
 
 result = hill_climb(cs_range[0], cs_range[1])
+result.sort()
 
 f = open(f'findgap2_results/{iname}.csv', 'w', encoding='utf-8')
-f.write('abs,rel,p5no,3no,avg,break\n')
+f.write('abs,rel,p5no,3no,best,avg,break\n')
 sus: float = UTC(model)
 def output(j):
     print(j)
     print(j/sus)
     u = compute(j, CSampler, 1000)
     print(u)
-    f.write(f'{j},{j/sus},{u["p5no"]},{u["3no"]},{u["avg"]},{u["break"]}\n')
-
-result.sort()
+    f.write(f'{j},{j/sus},{u["p5no"]},{u["3no"]},{u["best"]},{u["avg"]},{u["break"]}\n')
 
 for cs in result:
     output(cs)

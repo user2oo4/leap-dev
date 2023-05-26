@@ -35,9 +35,9 @@ def solve(graph: NXGraph) -> int :
     return minn
 
 def output(graph: NXGraph, name: str):
-    nx.drawing.nx_agraph.write_dot(graph, f'dotfiles/{name}.dot')
+    nx.drawing.nx_agraph.write_dot(graph, f'dotfiles_2/{name}.dot')
     sol = solve(graph)
-    with open(f'instances/{name}.txt', 'w', encoding='utf-8') as f:
+    with open(f'instances_2/{name}.txt', 'w', encoding='utf-8') as f:
         f.write(f'{name}\n')
         f.write(f'{len(graph)}\n')
         for i in range(len(graph)):
@@ -46,7 +46,7 @@ def output(graph: NXGraph, name: str):
         for e in graph.edges.data():
             f.write(f'{e[0]} {e[1]} {e[2]["w"]}\n')
         f.write('-1\n')
-        f.write(f'{sol}\n')
+        f.write(f'{int(sol)}\n')
 
 def add_weight(graph: NXGraph, lower: int, upper: int):
     for n in graph.nodes():
@@ -65,6 +65,24 @@ def add_weight(graph: NXGraph, lower: int, upper: int):
                 break
         graph.edges[e]['w'] = u
 
+nodes = [20,50,100]
+weights = [10,30,60,100]
+
+
+import math
+for n in nodes:
+    for w in weights:
+        graph = WSGraph(n, math.floor(math.log2(n) * 2), 0.3, 1000, SEED)
+        add_weight(graph, -w, w)
+        output(graph,f'ws_{n}_{w}')
+        
+        graph = BAGraph(n, math.floor(math.log2(n) * 2), SEED)
+        add_weight(graph, -w, w)
+        output(graph,f'ba_{n}_{w}')
+        
+        graph = PLTree(n, seed=SEED, tries=1000)
+        add_weight(graph, -w, w)
+        output(graph,f'plt_{n}_{w}')
 
 # graph = WSGraph(100, 12, 0.3, 100, SEED)
 
@@ -74,10 +92,10 @@ def add_weight(graph: NXGraph, lower: int, upper: int):
 
 
 
-graph = BAGraph(100, 18, SEED)
+# graph = BAGraph(100, 18, SEED)
 
-add_weight(graph, -20, 20)
+# add_weight(graph, -20, 20)
 
-output(graph, 'ba100')
+# output(graph, 'ba100')
 
 # nx.draw(graph)
