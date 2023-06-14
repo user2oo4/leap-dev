@@ -203,21 +203,24 @@ cs_range = get_cs_range(DEF_LB, DEF_UB)
 result = hill_climb(cs_range[0], cs_range[1])
 result.sort()
 
+f = open(f'findgap2_runtime.txt', mode='a')
 print(f'Run time: {(time.time() - start_time)} seconds')
-
-f = open(f'findgap2_results_p/{iname}.csv', 'w', encoding='utf-8')
-f.write('abs,rel,p5no,3no,best,avg,break\n')
-sus: float = UTC(model)
-def output(j):
-    print(j)
-    print(j/sus)
-    u = compute(j, CSampler, 1000)
-    print(u)
-    f.write(f'{j},{j/sus},{u["p5no"]},{u["3no"]},{u["best"]},{u["avg"]},{u["break"]}\n')
-
-for cs in result:
-    output(cs)
-output(sus)
-
+f.write(f'{iname},{(time.time() - start_time)}\n')
 f.close()
+
+# f = open(f'findgap2_results_p/{iname}.csv', 'w', encoding='utf-8')
+# f.write('abs,rel,p5no,3no,best,avg,break\n')
+# sus: float = UTC(model)
+# def output(j):
+#     print(j)
+#     print(j/sus)
+#     u = compute(j, CSampler, 1000)
+#     print(u)
+#     f.write(f'{j},{j/sus},{u["p5no"]},{u["3no"]},{u["best"]},{u["avg"]},{u["break"]}\n')
+
+# for cs in result:
+#     output(cs)
+# output(sus)
+
+# f.close()
 # print(UTC(model))   
