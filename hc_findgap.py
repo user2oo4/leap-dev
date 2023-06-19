@@ -10,6 +10,7 @@ from dwave.cloud import Client
 from dwave.system import DWaveSampler, EmbeddingComposite, LazyFixedEmbeddingComposite
 from dimod.binary.binary_quadratic_model import BinaryQuadraticModel
 from dimod.vartypes import SPIN
+from dimod import SampleSet
 from minorminer import find_embedding
 from dwave.embedding.chain_strength import uniform_torque_compensation as UTC
 from dwave.embedding import embed_bqm, unembed_sampleset, EmbeddedStructure
@@ -41,8 +42,26 @@ class FakeChimeraSampler(dimod.Sampler, dimod.Structured):
     def edgelist(self):
         return hw.edges.keys()
     
-    def sample(self, bqm, **parameters):
-        return hc_sample(bqm)
+    def sample(self, bqm: BinaryQuadraticModel, num_reads: int, seed = -1, **parameters) -> SampleSet:
+        new_bqm, mapping = bqm.relabel_variables_as_integers(inplace=False)
+        state = random.getstate()
+        if (seed == -1):
+            random.seed()
+        else:
+            random.seed(seed)
+        raw_samples : list[dict[int,int]] = []
+        for i in range(num_reads):
+            cur_seed = random.randint(0,998244353)
+            # print(cur_seed)
+            arr = hc_sample(new_bqm, cur_seed)
+            # print(arr)
+            dic : dict[int,int] = {}
+            for (k,v) in mapping.items():
+                # print(f'{k},{v}\n')
+                dic[v] = arr[k]
+            raw_samples.append(dic)
+        random.setstate(state)
+        return SampleSet.from_samples_bqm(raw_samples, bqm)
 
 FCSampler = FakeChimeraSampler()
 
