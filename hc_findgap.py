@@ -19,7 +19,7 @@ from copy import deepcopy
 from climb_sample import hc_sample
 from dwave.samplers import SimulatedAnnealingSampler
 SASampler = SimulatedAnnealingSampler()
-CSampler = DWaveSampler(solver={'topology__type': 'pegasus'})
+# CSampler = DWaveSampler(solver={'topology__type': 'pegasus'})
 
 hw = dnx.chimera_graph(16,16)
 
@@ -43,6 +43,7 @@ class FakeChimeraSampler(dimod.Sampler, dimod.Structured):
         return hw.edges.keys()
     
     def sample(self, bqm: BinaryQuadraticModel, num_reads: int, seed = -1, **parameters) -> SampleSet:
+        start_time = time.time()
         new_bqm, mapping = bqm.relabel_variables_as_integers(inplace=False)
         state = random.getstate()
         if (seed == -1):
@@ -61,6 +62,7 @@ class FakeChimeraSampler(dimod.Sampler, dimod.Structured):
                 dic[v] = arr[k]
             raw_samples.append(dic)
         random.setstate(state)
+        
         return SampleSet.from_samples_bqm(raw_samples, bqm)
 
 FCSampler = FakeChimeraSampler()
@@ -223,23 +225,23 @@ result = hill_climb(cs_range[0], cs_range[1])
 result.sort()
 
 # f = open(f'findgap2_runtime.txt', mode='a')
-# print(f'Run time: {(time.time() - start_time)} seconds')
+print(f'Run time: {(time.time() - start_time)} seconds')
 # f.write(f'{iname},{(time.time() - start_time)}\n')
 # f.close()
 
 # f = open(f'findgap2_results_p/{iname}.csv', 'w', encoding='utf-8')
 # f.write('abs,rel,p5no,3no,best,avg,break\n')
-# sus: float = UTC(model)
-# def output(j):
-#     print(j)
-#     print(j/sus)
-#     u = compute(j, CSampler, 1000)
-#     print(u)
-#     f.write(f'{j},{j/sus},{u["p5no"]},{u["3no"]},{u["best"]},{u["avg"]},{u["break"]}\n')
+sus: float = UTC(model)
+def output(j):
+    print(j)
+    print(j/sus)
+    # u = compute(j, CSampler, 1000)
+    # print(u)
+    # f.write(f'{j},{j/sus},{u["p5no"]},{u["3no"]},{u["best"]},{u["avg"]},{u["break"]}\n')
 
-# for cs in result:
-#     output(cs)
-# output(sus)
+for cs in result:
+    output(cs)
+output(sus)
 
 # f.close()
 # print(UTC(model))   
