@@ -103,7 +103,7 @@ ll INV(ll a, ll p)
 
 void raw_hc_sample(int n, int seed, int* h, vector<int>* j,  vector<int>* weight, int* var) {
     srand(seed);
-    cout<<seed<<endl;
+    // cout<<seed<<endl;
     int delta[2048];
     int local_h[2048],local_var[2048];
     vector<int> local_j[2048],local_w[2048];

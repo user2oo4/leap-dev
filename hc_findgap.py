@@ -16,54 +16,11 @@ from dwave.embedding.chain_strength import uniform_torque_compensation as UTC
 from dwave.embedding import embed_bqm, unembed_sampleset, EmbeddedStructure
 from functools import partial
 from copy import deepcopy
-from climb_sample import hc_sample
 from dwave.samplers import SimulatedAnnealingSampler
 SASampler = SimulatedAnnealingSampler()
 # CSampler = DWaveSampler(solver={'topology__type': 'pegasus'})
 
-hw = dnx.chimera_graph(16,16)
-
-class FakeChimeraSampler(dimod.Sampler, dimod.Structured):
-    @property
-    def properties(self) -> dict[str, any]:
-        return SASampler.properties
-    
-    
-    @property
-    def parameters(self) -> dict[str, any]:
-        return SASampler.parameters
-    
-    @property
-    def nodelist(self):
-        return hw.nodes.keys()
-    
-    
-    @property
-    def edgelist(self):
-        return hw.edges.keys()
-    
-    def sample(self, bqm: BinaryQuadraticModel, num_reads: int, seed = -1, **parameters) -> SampleSet:
-        start_time = time.time()
-        new_bqm, mapping = bqm.relabel_variables_as_integers(inplace=False)
-        state = random.getstate()
-        if (seed == -1):
-            random.seed()
-        else:
-            random.seed(seed)
-        raw_samples : list[dict[int,int]] = []
-        for i in range(num_reads):
-            cur_seed = random.randint(0,998244353)
-            # print(cur_seed)
-            arr = hc_sample(new_bqm, cur_seed)
-            # print(arr)
-            dic : dict[int,int] = {}
-            for (k,v) in mapping.items():
-                # print(f'{k},{v}\n')
-                dic[v] = arr[k]
-            raw_samples.append(dic)
-        random.setstate(state)
-        
-        return SampleSet.from_samples_bqm(raw_samples, bqm)
+from helpers import FakeChimeraSampler
 
 FCSampler = FakeChimeraSampler()
 
@@ -113,7 +70,9 @@ def compute(j: float, sampler: dimod.Sampler, runs: int) -> dict[str,float]:
     print(f'strength: {j}')
     
     composite = LazyFixedEmbeddingComposite(sampler, find_embedding=fe)
+    print(time.time())
     sample_set = composite.sample(model, num_reads = runs, chain_strength = j)
+    print(time.time())
 
     s1_cnt: float = 0
     s2_cnt: float = 0
@@ -218,6 +177,10 @@ def hill_climb(lb: float, ub: float) -> list[float]:
     return result
 
 start_time = time.time()
+
+for i in range(10):
+    res = compute((i+1) * 100000, FCSampler, 200)
+    print(res)
 
 cs_range = get_cs_range(DEF_LB, DEF_UB)
 
