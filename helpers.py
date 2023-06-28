@@ -30,7 +30,7 @@ SASampler = SimulatedAnnealingSampler()
 
 hw = dnx.chimera_graph(16,16)
 
-class FakeChimeraSampler(dimod.Sampler, dimod.Structured):
+class HillClimbChimeraSampler(dimod.Sampler, dimod.Structured):
     @property
     def properties(self) -> dict[str, any]:
         return SASampler.properties

@@ -17,12 +17,22 @@ from dwave.embedding import embed_bqm, unembed_sampleset, EmbeddedStructure
 from functools import partial
 from copy import deepcopy
 from dwave.samplers import SimulatedAnnealingSampler
+
+
 SASampler = SimulatedAnnealingSampler()
 # CSampler = DWaveSampler(solver={'topology__type': 'pegasus'})
 
-from helpers import FakeChimeraSampler
+from helpers import HillClimbChimeraSampler
 
-FCSampler = FakeChimeraSampler()
+
+def fe(S, T, **kwargs):
+    print('find_embedding called')
+    return find_embedding(S, T, random_seed=123123)
+
+FCSampler = HillClimbChimeraSampler()
+
+# C_Composite = LazyFixedEmbeddingComposite(CSampler, find_embedding=fe)
+FC_Composite = LazyFixedEmbeddingComposite(FCSampler, find_embedding=fe)
 
 
 
@@ -62,14 +72,11 @@ print(f'Optimal solution: {optimal_solution}')
 EPS = 1e-9
 cached : dict = {}
 
-def fe(S, T, **kwargs):
-    return find_embedding(S, T, random_seed=123123)
 
-def compute(j: float, sampler: dimod.Sampler, runs: int) -> dict[str,float]:
+def compute(j: float, composite: dimod.Sampler, runs: int) -> dict[str,float]:
     print('Final run:')
     print(f'strength: {j}')
     
-    composite = LazyFixedEmbeddingComposite(sampler, find_embedding=fe)
     print(time.time())
     sample_set = composite.sample(model, num_reads = runs, chain_strength = j)
     print(time.time())
@@ -100,8 +107,8 @@ def compute(j: float, sampler: dimod.Sampler, runs: int) -> dict[str,float]:
 
 DEF_D: float = 0.01
 def get_d(j: float, delta: float) -> float:
-    res = compute(j + delta / 2, FCSampler, 1000)
-    res_d = compute(j - delta / 2, FCSampler, 1000)
+    res = compute(j + delta / 2, FC_Composite, 1000)
+    res_d = compute(j - delta / 2, FC_Composite, 1000)
     
     return math.log(res_d['break'] / res['break']) / delta
 
@@ -122,7 +129,7 @@ def get_cs_range(lb: float, ub: float) -> tuple:
     r = start_high
     for i in range(DEF_BS_RUNS):
         mid = (l+r)/2
-        if (compute(mid, FCSampler, 200)['break'] < lb):
+        if (compute(mid, FC_Composite, 200)['break'] < lb):
             r = mid
         else:
             l = mid
@@ -133,7 +140,7 @@ def get_cs_range(lb: float, ub: float) -> tuple:
     r = start_high
     for i in range(DEF_BS_RUNS):
         mid = (l+r)/2
-        if (compute(mid, FCSampler, 200)['break'] < ub):
+        if (compute(mid, FC_Composite, 200)['break'] < ub):
             r = mid
         else:
             l = mid
@@ -152,7 +159,7 @@ def hill_climb(lb: float, ub: float) -> list[float]:
         point = random.random()*(ub-lb)/DEF_SPLIT+lb+(ub-lb)/DEF_SPLIT*(tri%DEF_SPLIT)
         # while True:
         #     point = random.random()*(ub-lb)+lb
-        #     if (compute(point, FCSampler, 200)['avg'] < optimal_solution * 0.65):
+        #     if (compute(point, FC_Composite, 200)['avg'] < optimal_solution * 0.65):
         #         break
 
         while True:
@@ -179,7 +186,7 @@ def hill_climb(lb: float, ub: float) -> list[float]:
 start_time = time.time()
 
 for i in range(10):
-    res = compute((i+1) * 100000, FCSampler, 200)
+    res = compute((i+1) * 100000, FC_Composite, 200)
     print(res)
 
 cs_range = get_cs_range(DEF_LB, DEF_UB)
@@ -198,7 +205,7 @@ sus: float = UTC(model)
 def output(j):
     print(j)
     print(j/sus)
-    # u = compute(j, CSampler, 1000)
+    # u = compute(j, C_Composite, 1000)
     # print(u)
     # f.write(f'{j},{j/sus},{u["p5no"]},{u["3no"]},{u["best"]},{u["avg"]},{u["break"]}\n')
 

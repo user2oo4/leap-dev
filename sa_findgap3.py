@@ -77,7 +77,11 @@ class FakeChimeraSampler(dimod.Sampler, dimod.Structured):
 FCSampler = FakeChimeraSampler()
 
 
+def fe(S, T, **kwargs):
+    return find_embedding(S, T, random_seed=123123)
 
+FC_Composite = LazyFixedEmbeddingComposite(FCSampler, find_embedding=fe)
+C_Composite = LazyFixedEmbeddingComposite(CSampler, find_embedding=fe)
 
 
 print('reading input')
@@ -108,21 +112,14 @@ optimal_solution = int(input())
 
 print(f'Optimal solution: {optimal_solution}')
 
-
-
-
 EPS = 1e-9
 
-def fe(S, T, **kwargs):
-    return find_embedding(S, T, random_seed=123123)
 
 cache : dict[float,dict[any,float]] = {}
 
-def compute(j: float, sampler: dimod.Sampler, runs: int) -> dict[str,float]:
+def compute(j: float, composite: dimod.Sampler, runs: int) -> dict[str,float]:
     print('Final run:')
     print(f'strength: {j}')
-
-    composite = LazyFixedEmbeddingComposite(sampler, find_embedding=fe)
 
     sample_set = composite.sample(model, num_reads = runs, chain_strength = j, cs2 = j)
 
@@ -192,8 +189,8 @@ def compute_dwave(j: float, sampler: dimod.Sampler, runs: int) -> dict[str,float
 
 DEF_D: float = 0.01
 def get_d(j: float, delta: float) -> float:
-    res = compute(j + delta / 2, FCSampler, 1000)
-    res_d = compute(j - delta / 2, FCSampler, 1000)
+    res = compute(j + delta / 2, FC_Composite, 1000)
+    res_d = compute(j - delta / 2, FC_Composite, 1000)
     
     return math.log(res_d['break'] / res['break']) / delta
 
@@ -214,7 +211,7 @@ def get_cs_range(lb: float, ub: float) -> tuple:
     r = start_high
     for i in range(DEF_BS_RUNS):
         mid = (l+r)/2
-        if (compute(mid, FCSampler, 1000)['break'] < lb):
+        if (compute(mid, FC_Composite, 1000)['break'] < lb):
             r = mid
         else:
             l = mid
@@ -225,7 +222,7 @@ def get_cs_range(lb: float, ub: float) -> tuple:
     r = start_high
     for i in range(DEF_BS_RUNS):
         mid = (l+r)/2
-        if (compute(mid, FCSampler, 1000)['break'] < ub):
+        if (compute(mid, FC_Composite, 1000)['break'] < ub):
             r = mid
         else:
             l = mid
@@ -244,7 +241,7 @@ def hill_climb(lb: float, ub: float) -> list[float]:
         point = random.random()*(ub-lb)/DEF_SPLIT+lb+(ub-lb)/DEF_SPLIT*(tri%DEF_SPLIT)
         # while True:
         #     point = random.random()*(ub-lb)+lb
-        #     if (compute(point, FCSampler, 200)['avg'] < optimal_solution * 0.65):
+        #     if (compute(point, FC_Composite, 200)['avg'] < optimal_solution * 0.65):
         #         break
 
         while True:
@@ -275,7 +272,7 @@ cs_range = get_cs_range(DEF_LB, DEF_UB)
 result = hill_climb(cs_range[0], cs_range[1])
 result.sort()
 
-f = open(f'findgap3_runtime.txt', mode='a')
+f = open(f'findgap32_runtime.txt', mode='a')
 print(f'Run time: {(time.time() - start_time)} seconds')
 f.write(f'{iname},{(time.time() - start_time)}\n')
 f.close()
@@ -286,7 +283,7 @@ f.close()
 # def output(j):
 #     print(j)
 #     print(j/sus)
-#     u = compute_dwave(j, CSampler, 1000)
+#     u = compute_dwave(j, C_Composite, 1000)
 #     print(u)
 #     f.write(f'{j},{j/sus},{u["p5no"]},{u["3no"]},{u["best"]},{u["avg"]},{u["break"]}\n')
 
