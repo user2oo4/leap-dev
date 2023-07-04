@@ -114,7 +114,7 @@ void raw_hc_sample(int n, int seed, int* h, vector<int>* j,  vector<int>* weight
         local_j[i] = j[i];
         local_w[i] = weight[i];
     }
-    
+
     for (int i=0;i<n;i++) {
         local_var[i]=(rand() % 2 * 2) - 1;
     }
@@ -150,6 +150,16 @@ void raw_hc_sample(int n, int seed, int* h, vector<int>* j,  vector<int>* weight
             }
         }
     }
+
+    // for (int i=0;i<n;i++) {
+    //     // local_var[i]=(rand() % 2 * 2) - 1;
+    //     delta[i] = local_h[i] * local_var[i];
+    //     for (int k=0; k<local_j[i].size(); k++) {
+    //         delta[i] += local_var[i] * local_var[local_j[i][k]] * local_w[i][k];
+    //     }
+    //     if (delta[i] > 0) cout<<"wtf";
+    //     assert(delta[i] <= 0);
+    // }
 
     for (int i=0;i<n;i++) var[i]=local_var[i];
 
