@@ -50,10 +50,9 @@ class HillClimbChimeraSampler(dimod.Sampler, dimod.Structured):
         return hw.edges.keys()
     
     def sample(self, bqm: BinaryQuadraticModel, num_reads: int, seed = -1, **parameters) -> SampleSet:
-        
-        print(f'start: {time.time()}')
+        # print(f'start: {time.time()}')
         new_bqm, mapping = bqm.relabel_variables_as_integers(inplace=False)
-        print(f'relabel: {time.time()}')
+        # print(f'relabel: {time.time()}')
         state = random.getstate()
         if (seed == -1):
             random.seed()
@@ -72,5 +71,5 @@ class HillClimbChimeraSampler(dimod.Sampler, dimod.Structured):
             raw_samples.append(dic)
         random.setstate(state)
         
-        print(f'end of runs: {time.time()}')
+        # print(f'end of runs: {time.time()}')
         return SampleSet.from_samples_bqm(raw_samples, bqm)
