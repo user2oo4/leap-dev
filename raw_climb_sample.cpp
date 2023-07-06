@@ -103,7 +103,9 @@ ll INV(ll a, ll p)
 
 void raw_hc_sample(int n, int seed, int* h, vector<int>* j,  vector<int>* weight, int* var) {
     srand(seed);
-    // cout<<seed<<endl;
+    cout<<"raw run"<<endl;
+    cout<<seed<<endl;
+
     int delta[2048];
     int local_h[2048],local_var[2048];
     vector<int> local_j[2048],local_w[2048];
@@ -113,6 +115,14 @@ void raw_hc_sample(int n, int seed, int* h, vector<int>* j,  vector<int>* weight
         local_h[i] = h[i];
         local_j[i] = j[i];
         local_w[i] = weight[i];
+        // cout<<"variable "<<i<<endl;
+        // cout<<"h = "<<local_h[i]<<endl;
+        // cout<<"edges "<<i<<endl;
+        for (int k=0;k<local_j[i].size();k++) {
+            if (i<local_j[i][k]) {
+                cout<<i<<' '<<local_j[i][k]<<' '<<local_w[i][k]<<endl;
+            }
+        }
     }
 
     for (int i=0;i<n;i++) {
@@ -128,15 +138,19 @@ void raw_hc_sample(int n, int seed, int* h, vector<int>* j,  vector<int>* weight
         if (delta[i] > 0) {
             pos.insert(i);
         }
+        cout<<"init "<<i<<' '<<local_var[i]<<' '<<delta[i]<<endl;
     }
 
     while (!pos.empty())
     {
+        cout<<"iteration: "<<endl;
+        for (auto g : pos) cout<<g<<' ';
+        cout<<endl;
         int a = rand() % pos.size();
         // cout<<a<<endl;
         auto it = pos.find_by_order(a);
         int tar = (*it);
-        // cout<<"s8s "<<tar<<endl;
+        cout<<"select "<<tar<<endl;
         pos.erase(it);
         delta[tar] = -delta[tar];
         local_var[tar] = -local_var[tar];
@@ -149,7 +163,12 @@ void raw_hc_sample(int n, int seed, int* h, vector<int>* j,  vector<int>* weight
                 pos.insert(local_j[tar][i]);
             }
         }
+        
+        for (int i=0;i<n;i++) {
+            cout<<"after "<<i<<' '<<local_var[i]<<' '<<delta[i]<<endl;
+        }
     }
+    
 
     // for (int i=0;i<n;i++) {
     //     // local_var[i]=(rand() % 2 * 2) - 1;
@@ -163,4 +182,35 @@ void raw_hc_sample(int n, int seed, int* h, vector<int>* j,  vector<int>* weight
 
     for (int i=0;i<n;i++) var[i]=local_var[i];
 
+}
+
+int main() {
+    string s;
+    int n,opt;
+    int h[100],res[100];
+    vector<int> j[100];
+    vector<int> w[100];
+    int i,k,a,b,c;
+    cin>>n;
+    for (i=0;i<n;i++) {
+        cin>>h[i];
+    }
+    while (true) {
+        cin>>a;
+        if (a!=-1) {
+            cin>>b>>c;
+        
+        j[a].push_back(b);
+        w[a].push_back(c);
+        
+        j[b].push_back(a);
+        w[b].push_back(c);
+        }
+        else {
+            break;
+        }
+    }
+    cin>>opt;
+    raw_hc_sample(n,123,h,j,w,res);
+    for (i=0;i<n;i++) cout<<i<<' '<<res[i]<<endl;
 }

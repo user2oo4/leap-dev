@@ -1,16 +1,16 @@
-f = open(f'sus.txt', 'w', encoding='utf-8')
-f.write('sus\n')
-f.write('20\n')
+f = open(f'instances_2/sus3.txt', 'w', encoding='utf-8')
+f.write('sus3\n')
+f.write('10\n')
 
 import random
-random.seed(123134)
-for i in range(20):
+random.seed(9835)
+for i in range(10):
     f.write('0\n')
 u = 0
-for i in range(20):
-    for j in range(i+1,20):
+for i in range(10):
+    for j in range(i+1,10):
         v = random.randint(5,30)
-        if (i>=10 or j<10):
+        if (i>=4 or j<4):
             f.write(f'{i} {j} {-v}\n')
         else:
             f.write(f'{i} {j} {v}\n')

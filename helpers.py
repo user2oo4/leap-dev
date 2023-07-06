@@ -66,7 +66,7 @@ class HillClimbChimeraSampler(dimod.Sampler, dimod.Structured):
             # print(arr)
             dic : dict[int,int] = {}
             for (k,v) in mapping.items():
-                # print(f'{k},{v}\n')
+                print(f'{k},{v}')
                 dic[v] = arr[k]
             raw_samples.append(dic)
         random.setstate(state)
