@@ -52,10 +52,10 @@ class FakeChimeraSampler(dimod.Sampler, dimod.Structured):
 
         intermediate = 0
         if (len(initial_states) == 0):
-            print('NO')
+            # print('NO')
             intermediate = SASampler.sample(bqm, num_reads=num_reads, **parameters)
         else:
-            print('YES')
+            # print('YES')
             intermediate = SASampler.sample(bqm, initial_states=initial_states, initial_states_generator='tile', num_reads=int(num_reads/10), **parameters)
             
 
@@ -118,8 +118,8 @@ EPS = 1e-9
 cache : dict[float,dict[any,float]] = {}
 
 def compute(j: float, composite: dimod.Sampler, runs: int) -> dict[str,float]:
-    print('Final run:')
-    print(f'strength: {j}')
+    # print('Final run:')
+    # print(f'strength: {j}')
 
     sample_set = composite.sample(model, num_reads = runs, chain_strength = j, cs2 = j)
 
@@ -148,12 +148,12 @@ def compute(j: float, composite: dimod.Sampler, runs: int) -> dict[str,float]:
     res['avg'] = avg / runs
     res['break'] = ncb_cnt / runs
     res['best'] = best
-    print(res)
+    # print(res)
     return res
 
 def compute_dwave(j: float, sampler: dimod.Sampler, runs: int) -> dict[str,float]:
-    print('Final run:')
-    print(f'strength: {j}')
+    # print('Final run:')
+    # print(f'strength: {j}')
 
     composite = LazyFixedEmbeddingComposite(sampler, find_embedding=fe)
 
@@ -184,14 +184,16 @@ def compute_dwave(j: float, sampler: dimod.Sampler, runs: int) -> dict[str,float
     res['avg'] = avg / runs
     res['break'] = ncb_cnt / runs
     res['best'] = best
-    print(res)
+    # print(res)
     return res
 
 DEF_D: float = 0.01
 def get_d(j: float, delta: float) -> float:
     res = compute(j + delta / 2, FC_Composite, 1000)
     res_d = compute(j - delta / 2, FC_Composite, 1000)
-    
+
+
+    print(f'{res_d["break"]} {res["break"]} {delta}')
     return math.log(res_d['break'] / res['break']) / delta
 
 
@@ -230,7 +232,7 @@ def get_cs_range(lb: float, ub: float) -> tuple:
     print(f'result: {res_lb}, {res_ub}')
     return (res_lb, res_ub)
 
-DEF_STEP: float = 0.002
+DEF_STEP: float = 0.02
 DEF_TRIES: int = 12
 DEF_SPLIT: int = 4
 DEF_ROUNDING: float = 0.1
@@ -244,19 +246,26 @@ def hill_climb(lb: float, ub: float) -> list[float]:
         #     if (compute(point, FC_Composite, 200)['avg'] < optimal_solution * 0.65):
         #         break
 
+
+        stop = 5
         while True:
-            stop = True
-            u = DEF_STEP * (ub-lb)
+            stop -= 1
+            u = random.random() * DEF_STEP * (ub-lb)
+            print(point)
             if get_d(point, DEF_D*(ub-lb)) < get_d(point + u, DEF_D*(ub-lb)):
                 point += u
-                stop = False
-                break
+                stop = 5
+                continue
             if get_d(point, DEF_D*(ub-lb)) < get_d(point - u, DEF_D*(ub-lb)):
                 point -= u
-                stop = False
+                stop = 5
+                continue
+            
+            print(stop)
+            if (stop == 0):
                 break
-            if (stop):
-                break
+        print('done')
+
         stop = False
         for g in result:
             if (abs(g-point) <= DEF_ROUNDING):
