@@ -194,7 +194,12 @@ def get_d(j: float, delta: float) -> float:
 
 
     print(f'{res_d["break"]} {res["break"]} {delta}')
-    return math.log(res_d['break'] / res['break']) / delta
+    if (res['break'] == 0):
+        return 1e9
+    elif (res_d['break'] ==     0):
+        return -1e9
+    else:
+        return math.log(res_d['break'] / res['break']) / delta
 
 
 DEF_LB: float = 0.002
@@ -232,7 +237,8 @@ def get_cs_range(lb: float, ub: float) -> tuple:
     print(f'result: {res_lb}, {res_ub}')
     return (res_lb, res_ub)
 
-DEF_STEP: float = 0.02
+DEF_START: float = 0.02
+DEF_STOP: float = 0.005
 DEF_TRIES: int = 12
 DEF_SPLIT: int = 4
 DEF_ROUNDING: float = 0.1
@@ -246,23 +252,16 @@ def hill_climb(lb: float, ub: float) -> list[float]:
         #     if (compute(point, FC_Composite, 200)['avg'] < optimal_solution * 0.65):
         #         break
 
-
-        stop = 5
+        u = DEF_START * (ub - lb)
         while True:
-            stop -= 1
-            u = random.random() * DEF_STEP * (ub-lb)
             print(point)
             if get_d(point, DEF_D*(ub-lb)) < get_d(point + u, DEF_D*(ub-lb)):
                 point += u
-                stop = 5
-                continue
             if get_d(point, DEF_D*(ub-lb)) < get_d(point - u, DEF_D*(ub-lb)):
                 point -= u
-                stop = 5
-                continue
-            
-            print(stop)
-            if (stop == 0):
+            u *= 0.95
+            print(u)
+            if (u > DEF_STOP * (ub-lb)):
                 break
         print('done')
 
@@ -286,19 +285,19 @@ print(f'Run time: {(time.time() - start_time)} seconds')
 f.write(f'{iname},{(time.time() - start_time)}\n')
 f.close()
 
-# f = open(f'findgap3_results_p/{iname}.csv', 'w', encoding='utf-8')
-# f.write('abs,rel,p5no,3no,best,avg,break\n')
-# sus: float = UTC(model)
-# def output(j):
-#     print(j)
-#     print(j/sus)
-#     u = compute_dwave(j, C_Composite, 1000)
-#     print(u)
-#     f.write(f'{j},{j/sus},{u["p5no"]},{u["3no"]},{u["best"]},{u["avg"]},{u["break"]}\n')
+f = open(f'findgap32_results_p/{iname}.csv', 'w', encoding='utf-8')
+f.write('abs,rel,p5no,3no,best,avg,break\n')
+sus: float = UTC(model)
+def output(j):
+    print(j)
+    print(j/sus)
+    u = compute_dwave(j, C_Composite, 1000)
+    print(u)
+    f.write(f'{j},{j/sus},{u["p5no"]},{u["3no"]},{u["best"]},{u["avg"]},{u["break"]}\n')
 
-# for cs in result:
-#     output(cs)
-# output(sus)
+for cs in result:
+    output(cs)
+output(sus)
 
-# f.close()
-# print(UTC(model))   
+f.close()
+print(UTC(model))   
