@@ -203,7 +203,7 @@ cs_range = get_cs_range(DEF_LB, DEF_UB)
 result = hill_climb(cs_range[0], cs_range[1])
 result.sort()
 
-f = open(f'findgap2_runtime.txt', mode='a')
+f = open(f'findgap2_runtime.csv', mode='a')
 print(f'Run time: {(time.time() - start_time)} seconds')
 f.write(f'{iname},{(time.time() - start_time)}\n')
 f.close()

@@ -280,12 +280,12 @@ cs_range = get_cs_range(DEF_LB, DEF_UB)
 result = hill_climb(cs_range[0], cs_range[1])
 result.sort()
 
-f = open(f'findgap32_runtime.txt', mode='a')
+f = open(f'findgap32_runtime.csv', mode='a')
 print(f'Run time: {(time.time() - start_time)} seconds')
 f.write(f'{iname},{(time.time() - start_time)}\n')
 f.close()
 
-f = open(f'findgap32_results_p/{iname}.csv', 'w', encoding='utf-8')
+f = open(f'findgap32_results/{iname}.csv', 'w', encoding='utf-8')
 f.write('abs,rel,p5no,3no,best,avg,break\n')
 sus: float = UTC(model)
 def output(j):
