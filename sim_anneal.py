@@ -16,7 +16,7 @@ Sampler = SASampler
 EPS = 1e-9
 
 with Client.from_config() as client:
-    CSolver = client.get_solver(name='DW_2000Q_6')
+    CSolver = client.get_solver(name='Advantage_system6.2')
     Solver = CSolver
 
     cs_list = [10,25,50,100,250,500,1000,3000,10000]
